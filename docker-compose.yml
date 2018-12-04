@@ -1,0 +1,23 @@
+---
+version: '3'
+services:
+  # postgresql: # Application relational database
+  #   image: postgres:11.1
+  #   restart: unless-stopped
+  #   ports:
+  #     - '45432:5432'
+  #   environment:
+  #     POSTGRES_PASSWORD: &postgresql_password topsecret
+  #     POSTGRES_USER: &postgresql_user dev
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  application:
+    image: ${APP_DOCKER_IMAGE}
+    restart: on-failure:5
+    # environment:
+    #   POSTGRES_HOST: postgresql
+    #   POSTGRES_USER: *postgresql_user
+    #   POSTGRES_PASSWORD: *postgresql_password
+
+# volumes:
+#   postgres_data:

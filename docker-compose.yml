@@ -14,7 +14,8 @@ services:
   application:
     image: ${APP_DOCKER_IMAGE}
     restart: on-failure:5
-    # environment:
+    environment:
+      DESIRED_MONTH: ${DESIRED_MONTH}
     #   POSTGRES_HOST: postgresql
     #   POSTGRES_USER: *postgresql_user
     #   POSTGRES_PASSWORD: *postgresql_password

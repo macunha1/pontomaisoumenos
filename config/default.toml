@@ -1,0 +1,13 @@
+[working_hours]
+possible_minutes_variation_start = 0
+possible_minutes_variation_end = 59
+# The hour that you (wanna) start to work
+possible_start_hour = 9
+lunch_time = 1
+# If you have flexible journey, this variable
+# will define the variation in the start hour
+# Otherwise, set it as 1 and it'll use the exact
+# time at "possible_start_hour"
+accepted_start_hour_variation = 1.23
+maximum_daily_working_hours = 10
+expected_daily_hours = 8.8

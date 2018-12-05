@@ -1,0 +1,6 @@
+.pytest_cache
+tests
+.gitignore
+docker-compose.yml
+Dockerfile
+Makefile

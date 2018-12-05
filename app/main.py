@@ -1,16 +1,11 @@
 from datetime import datetime, timedelta
 from calendar import monthrange
+from configparser import ConfigParser
 from pandas import date_range, DatetimeIndex
 from pandas.tseries.offsets import CustomBusinessDay
 from holidays import BrazilianHolidayCalendar
-from os import getenv
+from os import getenv, path
 import numpy
-
-# Possible timerange to control the "work journey"
-POSSIBLE_MINUTES = numpy.arange(0, 59)
-POSSIBLE_START_HOURS = numpy.arange(9, 11)
-POSSIBLE_STOP_HOURS = numpy.arange(18, 20)
-EXPECTED_DAILY_HOUR = 8.8
 
 
 def get_business_days(month: int, year: int) -> DatetimeIndex:
@@ -46,6 +41,14 @@ def get_possible_datetime(from_datetime: datetime,
                     minute=numpy.random.choice(possible_minute))
 
 
+def calculate_possible_times(from_value: int,
+                             variation: float) -> numpy.arange:
+    _start_at_value = int(from_value)
+    _stop_at_value = int(from_value * variation)
+    return numpy.arange(start=min(_start_at_value, _stop_at_value),
+                        stop=max(_start_at_value, _stop_at_value))
+
+
 def generate_punches(month_expected_hours: int,
                      available_business_days: DatetimeIndex) -> list:
     _expected_hours_td = timedelta(hours=month_expected_hours - 2)
@@ -78,14 +81,45 @@ def main(target_month: int, target_year: int) -> list:
     _business_days = get_business_days(month=target_month,
                                        year=target_year)
     return generate_punches(
-        month_expected_hours=EXPECTED_DAILY_HOUR * len(_business_days),
+        month_expected_hours=(EXPECTED_DAILY_HOURS +
+                              LUNCH_TIME) * len(_business_days),
         available_business_days=_business_days)
 
 
 if __name__ == "__main__":
+    configuration = ConfigParser()
+    APPLICATION_ROOT_PATH = path.abspath(
+        path.join(path.dirname(__file__), ".."))
+
+    configuration.read(
+        path.join(APPLICATION_ROOT_PATH, "config", "default.toml"))
+    # Possible timerange to control the "work journey"
+    POSSIBLE_MINUTES = numpy.arange(
+        start=configuration.getint("working_hours",
+                                   "possible_minutes_variation_start"),
+        stop=configuration.getint("working_hours",
+                                  "possible_minutes_variation_end"))
+    _possible_start_hour = configuration.getint("working_hours",
+                                                "possible_start_hour")
+
+    POSSIBLE_START_HOURS = calculate_possible_times(
+        from_value=_possible_start_hour,
+        variation=configuration.getfloat("working_hours",
+                                         "accepted_start_hour_variation"))
+
+    EXPECTED_DAILY_HOURS = configuration.getfloat("working_hours",
+                                                  "expected_daily_hours")
+    MAX_DAILY_HOURS = configuration.getint("working_hours",
+                                           "maximum_daily_working_hours")
+
+    LUNCH_TIME = configuration.getint("working_hours", "lunch_time")
+    POSSIBLE_STOP_HOURS = calculate_possible_times(
+        from_value=_possible_start_hour + EXPECTED_DAILY_HOURS + LUNCH_TIME,
+        variation=MAX_DAILY_HOURS/EXPECTED_DAILY_HOURS)
+
     __CURRENT_DATE = datetime.now()
-    TARGET_MONTH = int(getenv("TARGET_MONTH", __CURRENT_DATE.month))
-    TARGET_YEAR = int(getenv("TARGET_YEAR", __CURRENT_DATE.year))
+    TARGET_MONTH = int(getenv("TARGET_MONTH") or __CURRENT_DATE.month)
+    TARGET_YEAR = int(getenv("TARGET_YEAR") or __CURRENT_DATE.year)
     _results = main(target_month=TARGET_MONTH, target_year=TARGET_YEAR)
 
     print("Perfect punches")

@@ -11,3 +11,13 @@ lunch_time = 1
 accepted_start_hour_variation = 1.23
 maximum_daily_working_hours = 10
 expected_daily_hours = 8.8
+
+[database]
+type = postgresql
+driver = psycopg2
+database = working_hours
+endpoint = postgres-01
+port = 5432
+username = dev
+password = topsecret!
+connection_string = %(type)s+%(driver)s://%(username)s:%(password)s@%(endpoint)s:%(port)s/

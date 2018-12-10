@@ -1,12 +1,14 @@
-FROM pypy:3-6-slim-jessie
+# FROM pypy:3-6-slim-jessie
+FROM python:3.6.7-slim-jessie
 
 COPY requirements.txt /tmp/requirements.txt
 RUN apt-get update && \
     # Install Dependencies
-    apt-get install build-essential -qq && \
+    apt-get install build-essential -qq \
+        libpq-dev && \
     pip install -r /tmp/requirements.txt && \
     # Configure the "operating system"
-    ln -s $(which pypy3) /usr/local/bin/python && \
+    # ln -s $(which pypy3) /usr/local/bin/python && \
     mkdir /usr/local/lib/pontomaisoumenos && \
     # Docker image clean up, reduces it size
     apt-get purge build-essential -qq && \
@@ -14,4 +16,5 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/*
 
 COPY . /usr/local/lib/pontomaisoumenos/
-ENTRYPOINT python /usr/local/lib/pontomaisoumenos/app/main.py
+WORKDIR /usr/local/lib/pontomaisoumenos
+ENTRYPOINT ["python", "-m", "app.main"]

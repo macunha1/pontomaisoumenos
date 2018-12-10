@@ -22,5 +22,6 @@ class BrazilianHolidayCalendar(AbstractHolidayCalendar):
         Holiday("All Souls' Day", month=11, day=2),
         Holiday("Republic Day", month=11, day=15),
         Holiday("Black Consciousness Day", month=11, day=20),
-        Holiday("Christmas", month=12, day=25)
+        Holiday("Christmas", month=12, day=25),
+        Holiday("New Years Day", month=12, day=31),
     ]

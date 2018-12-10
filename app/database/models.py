@@ -6,6 +6,7 @@ from sqlalchemy import Column, String, MetaData, \
 from sqlalchemy.dialects.postgresql import BOOLEAN, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from uuid import uuid4
 from ..configurations import get_database_connection
 
 Base = declarative_base()
@@ -26,7 +27,9 @@ def drop_tables():
 
 class User(Base):
     __tablename__ = "USERS"
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True),
+                primary_key=True,
+                default=uuid4)
     email = Column(String(128), unique=True)
     password = Column(UnicodeText())
     active = Column(BOOLEAN)
@@ -34,9 +37,11 @@ class User(Base):
     created_at = Column(DateTime)
 
 
-class Punches(Base):
+class Punch(Base):
     __tablename__ = "WORKING_PUNCHES"
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True),
+                primary_key=True,
+                default=uuid4)
     user_id = Column(
         UUID,
         ForeignKey('USERS.id', ondelete='CASCADE'),
@@ -50,10 +55,12 @@ class Punches(Base):
     created_at = Column(DateTime)
 
 
-class RsaKeys(Base):
+class RsaKey(Base):
     __tablename__ = "__RSA"
-    id = Column(Text(), primary_key=True)
-    private_key = Column(Text(), unique=True)
+    id = Column(UUID(as_uuid=True),
+                primary_key=True,
+                default=uuid4)
+    private_key = Column(Text)
     user_id = Column(
         UUID,
         ForeignKey('USERS.id', ondelete='CASCADE'),

@@ -4,3 +4,6 @@ configparser==3.5.0
 PyCrypto==2.6.1
 sqlalchemy==1.2.14
 psycopg2-binary==2.7.6.1
+dramatiq[redis, watch]==1.4.0
+requests==2.20.1
+python-json-logger==0.1.10

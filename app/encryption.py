@@ -17,9 +17,9 @@ class EncryptionHandler:
     def decrypt(self, value: tuple):
         return self.key.decrypt(value)
 
+    # Exports Private RSA key
     def get_key(self):
-        _base64 = b64encode(self.key.exportKey())
-        return _base64  # Exports Private RSA key
+        return b64encode(self.key.exportKey())
 
     def load_key(self,
                  value: bytes):

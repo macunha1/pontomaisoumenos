@@ -21,3 +21,13 @@ port = 5432
 username = dev
 password = topsecret!
 connection_string = %(type)s+%(driver)s://%(username)s:%(password)s@%(endpoint)s:%(port)s/
+
+[message_broker]
+type = redis
+database = 0
+endpoint = redis-01
+port = 6379
+connection_string = %(type)s://%(endpoint)s:%(port)s/%(database)s
+
+[logging]
+level = DEBUG

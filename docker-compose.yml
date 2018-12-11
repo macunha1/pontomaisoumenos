@@ -11,18 +11,37 @@ services:
       POSTGRES_USER: &postgresql_user dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:5.0-alpine3.8
+    restart: unless-stopped
+    ports:
+      - '36379:6379'
   application:
     image: ${APP_DOCKER_IMAGE}
     restart: on-failure:2
     environment:
       TARGET_MONTH: ${TARGET_MONTH}
       TARGET_YEAR: ${TARGET_YEAR}
-      RUN_MIGRATIONS: "yes"
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS}
       POSTGRES_HOST: postgresql
       POSTGRES_USER: *postgresql_user
       POSTGRES_PASSWORD: *postgresql_password
     links:
       - "postgresql:postgres-01"
+      - "redis:redis-01"
+  dramatiq:
+    image: ${APP_DOCKER_IMAGE}
+    restart: on-failure:2
+    entrypoint: dramatiq app.tasks
+    environment:
+      TARGET_MONTH: ${TARGET_MONTH}
+      TARGET_YEAR: ${TARGET_YEAR}
+      POSTGRES_HOST: postgresql
+      POSTGRES_USER: *postgresql_user
+      POSTGRES_PASSWORD: *postgresql_password
+    links:
+      - "postgresql:postgres-01"
+      - "redis:redis-01"
 
 volumes:
   postgres_data:

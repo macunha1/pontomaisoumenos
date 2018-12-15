@@ -1,6 +1,8 @@
 from Crypto.PublicKey import RSA
 from Crypto import Random
-from base64 import b64encode, b64decode
+from .configurations import get_logger
+
+LOGGER = get_logger()
 
 
 class EncryptionHandler:
@@ -9,19 +11,20 @@ class EncryptionHandler:
             __random_gen = Random.new().read
             self.key = RSA.generate(2048, __random_gen)
         else:
-            self.key = self.load_key(value=private_key)
+            self.load_key(value=private_key)
 
-    def encrypt(self, value: str):
-        return self.key.encrypt(value.encode(), 32)
+    def encrypt(self, value: str) -> bytes:
+        return self.key.encrypt(value.encode(), 32)[0]
 
-    def decrypt(self, value: tuple):
-        return self.key.decrypt(value)
+    def decrypt(self, value: tuple) -> str:
+        return self.key.decrypt(value).decode()
 
     # Exports Private RSA key
-    def get_key(self):
-        return b64encode(self.key.exportKey())
+    def get_key(self) -> str:
+        return self.key.exportKey().decode()
 
     def load_key(self,
-                 value: bytes):
-        _key = b64decode(value)
-        self.key = RSA.importKey(_key)  # Reload an exported RSA key
+                 value: str):
+        if isinstance(value, bytes):
+            value = value.decode()
+        self.key = RSA.importKey(value)  # Reload an exported RSA key

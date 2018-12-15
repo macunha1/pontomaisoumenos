@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column, String, MetaData, \
-    UnicodeText, Text, DateTime, ForeignKey, \
+    Text, Text, DateTime, ForeignKey, \
     create_engine
 from sqlalchemy.dialects.postgresql import BOOLEAN, UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -22,7 +22,7 @@ def create_tables():
 
 def drop_tables():
     for tbl in reversed(Base.metadata.sorted_tables):
-        tbl.drop(db)
+        tbl.drop(db, checkfirst=True)
 
 
 class User(Base):
@@ -31,7 +31,7 @@ class User(Base):
                 primary_key=True,
                 default=uuid4)
     email = Column(String(128), unique=True)
-    password = Column(UnicodeText())
+    password = Column(Text)
     active = Column(BOOLEAN)
     updated_at = Column(DateTime)
     created_at = Column(DateTime)

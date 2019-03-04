@@ -13,6 +13,9 @@ def get_logger():
     logHandler = logging.StreamHandler()
     formatter = jsonlogger.JsonFormatter()
     logHandler.setFormatter(formatter)
+    if (logger.hasHandlers()):
+        logger.handlers.clear()
+
     logger.addHandler(logHandler)
     logger.setLevel(getattr(logging,
                             configurations.get("logging", "level")))

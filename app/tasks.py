@@ -1,7 +1,7 @@
 from dramatiq.brokers.redis import RedisBroker
 from .configurations import get_configurations
+from .external.pontomais import PontoMais
 import dramatiq
-import requests
 
 CONFIGURATIONS = get_configurations()
 redis_broker = RedisBroker(
@@ -12,11 +12,13 @@ dramatiq.set_broker(redis_broker)
 
 
 @dramatiq.actor
-def count_words(url):
-    response = requests.get(url)
-    count = len(response.text.split(" "))
-    print(f"There are {count} words at {url!r}.")
-
-@dramatiq.actor
-def register_punch():
-    response = requests.get("https://www.google.com")
+def register_punch(email: str,
+                   password: str,
+                   address: str,
+                   latitude: float,
+                   longitude: float):
+    pontomais_api = PontoMais(user_email=email,
+                              user_password=password)
+    pontomais_api.register_punch(address=address,
+                                 latitude=latitude,
+                                 longitude=longitude)

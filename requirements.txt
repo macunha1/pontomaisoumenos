@@ -1,7 +1,7 @@
 numpy==1.15.4
 pandas==0.23.4
 configparser==3.5.0
-PyCrypto==2.6.1
+# PyCrypto==2.6.1
 sqlalchemy==1.2.14
 psycopg2-binary==2.7.6.1
 dramatiq[redis, watch]==1.4.0

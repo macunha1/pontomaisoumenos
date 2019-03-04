@@ -1,10 +1,11 @@
 from .configurations import get_configurations, \
     get_database_connection, get_logger
-from .database.models import User, Punch, RsaKey
+from .database.models import User, Punch
 from .database.models import create_tables, drop_tables
+from .gps import GpsOscilator
 from .punches import PunchSimulator
-from .tasks import count_words
-from datetime import datetime, timedelta
+from .tasks import register_punch
+from datetime import datetime
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
@@ -18,25 +19,21 @@ _db_session = sessionmaker(__DB_ENGINE)()
 logger = get_logger()
 
 
-# create_tables()  # TODO: Design an inteligent migrations execution
-#                    and move it inside run migration (create database)
-def get_default_user():
-    # It's a POC and shouldn't be moved this way to production
-    stmt = exists().where(User.email == "matheus.cunha@loggi.com")
+def get_default_user(user_email: str, default_password: str = "wv&j#7$zd9f#aXUuF"):
+    stmt = exists().where(User.email == user_email)
     if not _db_session.query(User.email).filter(stmt).scalar():
 
-        __default_password = '/E|q&3?wv&j#7$zd9f#aXUuF">atT9Ea'
         __created_date = datetime.now()
         default_user = User(id=uuid4(),
-                            email="matheus.cunha@loggi.com",
-                            password=__default_password,
+                            email=user_email,
+                            password=default_password,
                             active=True,
                             updated_at=__created_date,
                             created_at=__created_date)
         _db_session.add(default_user)
         _db_session.commit()
     return (_db_session.query(User)
-                       .filter_by(email='matheus.cunha@loggi.com')
+                       .filter_by(email=user_email)
                        .first())
 
 
@@ -82,30 +79,39 @@ def main() -> None:
         target_month=int(getenv("TARGET_MONTH") or __CURRENT_DATE.month),
         target_year=int(getenv("TARGET_YEAR") or __CURRENT_DATE.year)
     )
-    # Reads the default user and its RSA key from database
-    _default_user = get_default_user()
-    user_rsa_key = _db_session.query(RsaKey) \
-                              .filter_by(user_id=str(_default_user.id)) \
-                              .first()
+    # Reads the current execution user from database
+    current_user = get_default_user(CONFIGURATIONS.get("user", "email"),
+                                    CONFIGURATIONS.get("user", "password"))
+
+    # Generates a random geolocation based on the latitude and longitude configured
+    gps = GpsOscilator(static_latitude=CONFIGURATIONS.getfloat("location", "latitude"),
+                       static_longitude=CONFIGURATIONS.getfloat("location", "longitude"))
+    static_latitude, static_longitude = gps.generate_latlong()
+    user_work_address = CONFIGURATIONS.get("location", "address")
 
     # Save punches for this user on database
     save_punches(from_simulator=punch_it,
-                 user=_default_user)
+                 user=current_user)
     __values = _db_session.query(Punch) \
-                          .filter_by(user_id=str(_default_user.id)) \
+                          .filter_by(user_id=str(current_user.id)) \
                           .all()
 
+    # Schedule the pendent punches with dramatiq
     for _result in __values:
         if _result.should_punch_at < __CURRENT_DATE:
             continue
         _key = "schedule-punch-for-{user}-at-{date}".format(
-            user=_default_user.id,
+            user=current_user.id,
             date=_result.should_punch_at.strftime("%d-%m-%y-%H:%M"))
         punch_at = _result.should_punch_at - datetime.now()
         logger.info("Registering value for punch %s in %s" %
-                (_key, round(punch_at.total_seconds() * 1000)))
-        count_words.send_with_options(
-            args=(_default_user.email, _default_user.password,),
+                    (_key, round(punch_at.total_seconds() * 1000)))
+        register_punch.send_with_options(
+            args=(current_user.email,
+                  current_user.password,
+                  user_work_address,
+                  static_latitude,
+                  static_longitude),
             delay=round(punch_at.total_seconds() * 1000))
 
 

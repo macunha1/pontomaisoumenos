@@ -40,9 +40,7 @@ class PontoMais:
         punch_data = {
             "_path": "/meu_ponto/registro_de_ponto",
             "time_card": {
-                "accuracy": 600,
-                "accuracy_method": True,
-                "address": address,
+                "address": address, 
                 "latitude": latitude,
                 "location_edited": False,
                 "longitude": longitude,
@@ -50,18 +48,35 @@ class PontoMais:
                 "original_latitude": latitude - 10,
                 "original_longitude": longitude + 10,
                 "reference_id": None
-            }
+            },
+            "_device": {
+                "manufacturer": None,
+                "model": None,
+                "uuid": None,
+                "version": None,
+                "browser": {
+                "name": "Firefox",
+                "version": "65.0",
+                "versionSearchString": "Firefox"
+                }
+            },
+            "_appVersion": "0.10.32"
         }
 
         punch_headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0",
             "Content-Type": "application/json",
+            "Referer": "https://app.pontomaisweb.com.br//",
+            "Api-Version": "2",
             "X-Requested-With": "br.com.pontomais.pontomais",
             "token-type": "Bearer",
+            "Origin": "https://app.pontomaisweb.com.br",
             "uid": self.user_email,
             "access-token": self.token,
-            "client": self.client_id
+            "client": self.client_id,
+            "TE": "Trailers"
         }
+
 
         response = requests.post(punch_endpoint,
                                  headers=punch_headers,

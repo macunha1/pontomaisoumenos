@@ -1,11 +1,12 @@
-# FROM pypy:3-6-slim-jessie
 FROM python:3.6.7-slim-jessie
 
 COPY requirements.txt /tmp/requirements.txt
+RUN printf "deb http://archive.debian.org/debian/ jessie main\ndeb-src http://archive.debian.org/debian/ jessie main\ndeb http://security.debian.org jessie/updates main\ndeb-src http://security.debian.org jessie/updates main" > /etc/apt/sources.list
 RUN apt-get update && \
+    apt-get install -y --no-install-recommends apt-utils && \
     # Install Dependencies
     apt-get install build-essential -qq \
-        libpq-dev && \
+    libpq-dev && \
     pip install -r /tmp/requirements.txt && \
     # Configure the "operating system"
     # ln -s $(which pypy3) /usr/local/bin/python && \

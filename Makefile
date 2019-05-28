@@ -4,8 +4,6 @@ DOCKER_IMAGE_VERSION := latest
 REMOTE_REGISTRY := docker.io
 REMOTE_USERNAME := macunha1
 RUN_MIGRATIONS := no
-TARGET_MONTH := ""
-TARGET_YEAR := ""
 
 tests:
 	flake8 .

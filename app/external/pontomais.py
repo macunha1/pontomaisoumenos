@@ -1,72 +1,89 @@
+import uuid
 import requests
+import json
 from ..configurations import get_logger
 
 LOGGER = get_logger()
 
+# Ponto Mais base API URL
+BASE_URL = 'https://api.pontomais.com.br'
+
 
 class PontoMais:
-    def __init__(self,
-                 user_email,
-                 user_password):
-        self.user_email = user_email
+    def __init__(self, user_login, user_password):
+        self.login = user_login
         self.user_password = user_password
-        self.token, self.client_id = self.authenticate()
+        self.uuid = str(uuid.uuid1())
+        self.token, self.client_id, self.expiry = self.authenticate()
 
     def authenticate(self) -> (str, str):
-        auth_endpoint = "http://api.pontomaisweb.com.br/api/auth/sign_in"
-        auth_headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0",
-            "Content-Type": "application/json",
-            "X-Requested-With": "br.com.pontomais.pontomais"
-        }
+        auth_endpoint = "{url}/api/auth/sign_in".format(url=BASE_URL)
         auth_credentials = {
-            "email": self.user_email,
+            "login": self.login,
             "password": self.user_password
         }
 
         response = requests.post(auth_endpoint,
-                                 headers=auth_headers,
                                  data=auth_credentials)
 
         if response.content and not response.raise_for_status():
-            LOGGER.debug(f"PontoMais.authenticate response body {response.body}")
+            LOGGER.debug(f"PontoMais.authenticate response body {response.json().get('success')}")
             response_json = response.json()
-            return response_json.get("token"), response_json.get("client_id")
+            return response_json.get("token"), response_json.get("client_id"), response_json.get("expiry")
+
         LOGGER.error(f"PontoMais.authenticate with error {response.status_code}")
 
     def register_punch(self, address: str, latitude: int, longitude: int) -> None:
-        punch_endpoint = "https://api.pontomaisweb.com.br/api/time_cards/register"
+        punch_endpoint = "{url}/api/time_cards/register".format(url=BASE_URL)
 
         punch_data = {
-            "_path": "/meu_ponto/registro_de_ponto",
-            "time_card": {
-                "accuracy": 600,
-                "accuracy_method": True,
-                "address": address,
-                "latitude": latitude,
-                "location_edited": False,
-                "longitude": longitude,
-                "original_address": address,
-                "original_latitude": latitude - 10,
-                "original_longitude": longitude + 10,
-                "reference_id": None
-            }
+            '_path': '/meu_ponto/registro_de_ponto',
+            '_device': {
+                'manufacturer': None,
+                'model': None,
+                'uuid': None,
+                'version': None,
+                'browser': {
+                    'name': 'Firefox',
+                    'version': '67.0',
+                    'versionSearchString': 'Firefox'
+                }
+            },
+            '_appVersion': '0.10.32',
+            'time_card': {
+                'latitude': latitude,
+                'longitude': longitude,
+                'address': address,
+                'reference_id': None,
+                'original_latitude': latitude,
+                'original_longitude': longitude,
+                'original_address': address,
+                'location_edited': True
+            },
         }
 
         punch_headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0",
-            "Content-Type": "application/json",
-            "X-Requested-With": "br.com.pontomais.pontomais",
-            "token-type": "Bearer",
-            "uid": self.user_email,
-            "access-token": self.token,
-            "client": self.client_id
+            'Host': 'api.pontomais.com.br',
+            'Content-Type': 'application/json;charset=utf-8',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0',
+            'Accept': 'application/json, text/plain, */*',
+            'Origin': 'https://app.pontomaisweb.com.br',
+            'Referer': 'https://app.pontomaisweb.com.br//',
+            'token-type': 'Bearer',
+            'uid': self.login,
+            'uuid': self.uuid,
+            'access-token': self.token,
+            'expiry': self.expiry,
+            'Api-Version': '2',
+            'client': self.client_id,
+            'content-type': 'application/json'
         }
 
-        response = requests.post(punch_endpoint,
-                                 headers=punch_headers,
-                                 data=punch_data,
-                                 verify=False)
+        response = requests.post(
+            punch_endpoint, 
+            headers=punch_headers, 
+            data=json.dumps(punch_data), 
+            verify=False)
 
         if response.content and not response.raise_for_status():
             response_json = response.json()

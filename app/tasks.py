@@ -17,7 +17,7 @@ def register_punch(email: str,
                    address: str,
                    latitude: float,
                    longitude: float):
-    pontomais_api = PontoMais(user_email=email,
+    pontomais_api = PontoMais(user_login=email,
                               user_password=password)
     pontomais_api.register_punch(address=address,
                                  latitude=latitude,

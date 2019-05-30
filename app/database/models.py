@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column, String, MetaData, \
-    Text, Text, DateTime, ForeignKey, \
+    Text, DateTime, ForeignKey, \
     create_engine
 from sqlalchemy.dialects.postgresql import BOOLEAN, UUID
 from sqlalchemy.ext.declarative import declarative_base

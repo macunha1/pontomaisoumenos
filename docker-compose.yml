@@ -20,8 +20,7 @@ services:
     image: ${APP_DOCKER_IMAGE}
     restart: on-failure:2
     environment:
-      TARGET_MONTH: ${TARGET_MONTH}
-      TARGET_YEAR: ${TARGET_YEAR}
+      TIMEZONE: ${TIMEZONE}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS}
       POSTGRES_HOST: postgresql
       POSTGRES_USER: *postgresql_user
@@ -34,8 +33,7 @@ services:
     restart: on-failure:2
     entrypoint: dramatiq app.tasks
     environment:
-      TARGET_MONTH: ${TARGET_MONTH}
-      TARGET_YEAR: ${TARGET_YEAR}
+      TIMEZONE: ${TIMEZONE}
       POSTGRES_HOST: postgresql
       POSTGRES_USER: *postgresql_user
       POSTGRES_PASSWORD: *postgresql_password

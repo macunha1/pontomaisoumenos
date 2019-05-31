@@ -1,5 +1,5 @@
-from .app import main
-from .app.holidays import BrazilianHolidayCalendar
+from app import main
+from app.holidays import BrazilianHolidayCalendar
 from datetime import timedelta
 from pandas import date_range
 from pandas.tseries.offsets import CustomBusinessDay

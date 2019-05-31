@@ -80,9 +80,9 @@ class PontoMais:
         }
 
         response = requests.post(
-            punch_endpoint, 
-            headers=punch_headers, 
-            data=json.dumps(punch_data), 
+            punch_endpoint,
+            headers=punch_headers,
+            data=json.dumps(punch_data),
             verify=False)
 
         if response.content and not response.raise_for_status():

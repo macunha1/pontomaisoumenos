@@ -1,0 +1,53 @@
+---
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: docker:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - pontomaisoumenos-v1-{{ .Branch }}
+          paths:
+            - /caches/pontomaisoumenos.tar
+
+      - run:
+          name: Install dependencies at host
+          command: |
+            apk add python3 python-dev python3-dev \
+              py-pip g++ gcc \
+              libffi-dev openssl-dev make
+            pip install docker-compose
+
+      - run:
+          name: Load the docker image layers cached
+          command: |
+            make CACHE_DIR=/caches load-docker-image
+
+      - run:
+          name: Run tests and build application Docker image
+          command: |
+            python3 -m pip install flake8 pytest
+            [ ! -d "${HOME}/.config" ] && mkdir "${HOME}/.config"
+            echo -e "[flake8]\nmax-line-length = 120" > "${HOME}/.config/flake8"
+            make docker
+
+      - run:
+          name: Run Docker save to cahce image layers
+          command: |
+            mkdir -p /caches
+            make CACHE_DIR=/caches save-docker-image
+
+      - save_cache:
+          key: pontomaisoumenos-v1-{{ .Branch }}
+          paths:
+            - /caches/pontomaisoumenos.tar
+
+workflows:
+  version: 2
+  build:
+    jobs:
+    - build

@@ -1,12 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, String, MetaData, \
-    Text, DateTime, ForeignKey, \
-    create_engine
-from sqlalchemy.dialects.postgresql import BOOLEAN, UUID
+from sqlalchemy import (
+    Boolean,
+    Column,
+    create_engine,
+    DateTime,
+    ForeignKey,
+    MetaData,
+    String,
+    Text,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from uuid import uuid4
 from ..configurations import get_database_connection
 
 Base = declarative_base()
@@ -27,43 +32,21 @@ def drop_tables():
 
 class User(Base):
     __tablename__ = "USERS"
-    id = Column(UUID(as_uuid=True),
-                primary_key=True,
-                default=uuid4)
+    id = Column(String(36), primary_key=True, default=uuid4)
     email = Column(String(128), unique=True)
-    password = Column(Text)
-    active = Column(BOOLEAN)
+    active = Column(Boolean)
     updated_at = Column(DateTime)
     created_at = Column(DateTime)
 
 
 class Punch(Base):
     __tablename__ = "WORKING_PUNCHES"
-    id = Column(UUID(as_uuid=True),
-                primary_key=True,
-                default=uuid4)
-    user_id = Column(
-        UUID,
-        ForeignKey('USERS.id', ondelete='CASCADE'),
-        nullable=False,
-    )
-    user = relationship('User', backref='punches')
+    id = Column(String(36), primary_key=True, default=uuid4)
+
+    user = relationship("User", backref="punches")
+    user_id = Column(String, ForeignKey("USERS.id", ondelete="CASCADE"), nullable=False)
 
     should_punch_at = Column(DateTime)
-    done = Column(BOOLEAN)
+    done = Column(Boolean)
     updated_at = Column(DateTime)
     created_at = Column(DateTime)
-
-
-class RsaKey(Base):
-    __tablename__ = "__RSA"
-    id = Column(UUID(as_uuid=True),
-                primary_key=True,
-                default=uuid4)
-    private_key = Column(Text)
-    user_id = Column(
-        UUID,
-        ForeignKey('USERS.id', ondelete='CASCADE'),
-        nullable=False,
-    )
-    user = relationship('User', backref='rsa_keys')

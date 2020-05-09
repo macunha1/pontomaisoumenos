@@ -10,6 +10,7 @@ class BrazilianHolidayCalendar(AbstractHolidayCalendar):
     """
     rules = [
         Holiday("New Years Day", month=1, day=1),
+        # It's not trivial to infer Carnival's date
         Holiday("Carnival", month=2, day=13,
                 offset=DateOffset(weekday=MO(3))),
         Holiday("Good Friday", month=3, day=30),

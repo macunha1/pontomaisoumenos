@@ -2,6 +2,10 @@ import numpy
 
 
 class GpsOscilator:
+    # To make the game interesting, GpsOsciltor generates random positions
+    # based on the original one provided. Otherwise it would be easy to
+    # spot the robotic behavior of this application, always sending the
+    # exactly same coordinates
     def __init__(self,
                  static_latitude: float,
                  static_longitude: float):

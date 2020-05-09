@@ -10,17 +10,14 @@ jobs:
       - setup_remote_docker
       - restore_cache:
           keys:
-            - pontomaisoumenos-v1-{{ .Branch }}
+            - pontomaisoumenos-v1-{{ .Branch }}-{{ checksum "Dockerfile" }}
           paths:
             - /caches/pontomaisoumenos.tar
 
       - run:
-          name: Install dependencies at host
+          name: Install make
           command: |
-            apk add python3 python-dev python3-dev \
-              py-pip g++ gcc \
-              libffi-dev openssl-dev make
-            pip install docker-compose
+            apk add make
 
       - run:
           name: Load the docker image layers cached
@@ -28,12 +25,9 @@ jobs:
             make CACHE_DIR=/caches load-docker-image
 
       - run:
-          name: Run tests and build application Docker image
+          name: Build application Docker image
           command: |
-            python3 -m pip install flake8 pytest
-            [ ! -d "${HOME}/.config" ] && mkdir "${HOME}/.config"
-            echo -e "[flake8]\nmax-line-length = 120" > "${HOME}/.config/flake8"
-            make docker
+            make docker-build
 
       - run:
           name: Run Docker save to cahce image layers
@@ -42,12 +36,31 @@ jobs:
             make CACHE_DIR=/caches save-docker-image
 
       - save_cache:
-          key: pontomaisoumenos-v1-{{ .Branch }}
+          key: pontomaisoumenos-v1-{{ .Branch }}-{{ checksum "Dockerfile" }}
           paths:
             - /caches/pontomaisoumenos.tar
+  test:
+    docker:
+      - image: python:3.7-slim-buster 
+    steps:
+      - checkout
+      - run:
+          name: Test | Install dependencies
+          command: |
+            apt-get update
+            apt-get install -y python3-dev gcc \
+              libffi-dev make
+            python3 -m pip install flake8 pytest
+            python3 -m pip install -r requirements.txt
+           
+      - run:
+          name: Test | Running PyTest
+          command: |
+            make tests
 
 workflows:
   version: 2
   build:
     jobs:
-    - build
+    - test
+    # - build # Not used ATM

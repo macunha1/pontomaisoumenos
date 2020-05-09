@@ -9,53 +9,55 @@ import numpy
 
 
 class PunchSimulator:
+    # Generates "working hours" based on a given acceptable range.
     def __init__(self,
-                 possible_minutes_start: int,
-                 possible_minutes_stop: int,
-                 possible_start_hours: int,
-                 possible_start_hours_variation: int,
-                 expected_daily_hours: int,
-                 max_daily_hours: int,
-                 lunch_time: int,
-                 target_month: int,
-                 target_year: int):
+                 start_min: int = 0,
+                 stop_min: int = 59,
+                 start_hours: int = 10,
+                 start_hours_variation: int = 1,
+                 expected_daily_hours: int = 8,
+                 max_daily_hours: int = 8,
+                 max_num_of_generations: int = 12750,
+                 lunch_time: int = 1,
+                 target_month: int = 1,
+                 target_year: int = 1970):
 
-        self.possible_minutes_start = possible_minutes_start
-        self.possible_minutes_stop = possible_minutes_stop
-        self.possible_start_hours = possible_start_hours
-        self.possible_start_hours_variation = possible_start_hours_variation
+        self.start_min = start_min
+        self.stop_min = stop_min
+        self.start_hours = start_hours
+        self.start_hours_variation = start_hours_variation
 
         self.expected_daily_hours = expected_daily_hours
         self.max_daily_hours = max_daily_hours
+        self.max_num_of_generations = max_num_of_generations
         self.lunch_time = lunch_time
 
         self.target_month = target_month
         self.target_year = target_year
 
         # Calculte the "mais ou menos" (values variation)
-        self.possible_hours_variation = (self.max_daily_hours /
-                                         self.expected_daily_hours)
-        self.possible_stop_hours = self.possible_start_hours + \
+        self.variation_hours = (self.max_daily_hours /
+                                self.expected_daily_hours)
+        self.stop_hours = self.start_hours + \
             self.expected_daily_hours + self.lunch_time
 
-        self.possible_start_hours = self \
-            .calculate_possible_times(from_value=self.possible_start_hours,
-                                      variation=self.possible_start_hours_variation)
+        self.start_hours = self \
+            .calculate_possible_times(from_value=self.start_hours,
+                                      variation=self.start_hours_variation)
 
-        self.possible_stop_hours = self \
-            .calculate_possible_times(from_value=self.possible_stop_hours,
-                                      variation=self.possible_hours_variation)
+        self.stop_hours = self \
+            .calculate_possible_times(from_value=self.stop_hours,
+                                      variation=self.variation_hours)
 
-        self.possible_minutes = numpy.arange(start=self.possible_minutes_start,
-                                             stop=self.possible_minutes_stop)
+        self.possible_minutes = numpy.arange(start=self.start_min,
+                                             stop=self.stop_min)
 
     def get_business_days(self) -> DatetimeIndex:
         month_length = monthrange(self.target_year,
                                   self.target_month)[1]
 
         start_at = datetime(self.target_year, self.target_month, 1)
-        finish_at = datetime(self.target_year, self.target_month,
-                             month_length)
+        finish_at = datetime(self.target_year, self.target_month, month_length)
 
         brazilian_calendar = BrazilianHolidayCalendar()
 
@@ -77,7 +79,7 @@ class PunchSimulator:
                         month=from_datetime.month,
                         day=from_datetime.day,
                         hour=numpy.random.choice(possible_hours),
-                        minute=numpy.random.choice(possible_minutes))
+                        minute=numpy.random.choice(self.possible_minutes))
 
     def calculate_possible_times(self,
                                  from_value: int,
@@ -92,30 +94,36 @@ class PunchSimulator:
                          available_business_days: DatetimeIndex) -> list:
         expected_hours_td = timedelta(hours=monthexpected_hours - 2)
         total_hours_td = timedelta(hours=monthexpected_hours)
+        max_num_of_gens = self.max_num_of_generations
 
         # Start to build value ranges until match the expected target
-        while (self.convert_timedelta_to_hours(expected_hours_td) !=
-                self.convert_timedelta_to_hours(total_hours_td)):
-            expected_hours_td = timedelta()
+        while ((self.convert_timedelta_to_hours(expected_hours_td) !=
+                self.convert_timedelta_to_hours(total_hours_td)) and
+               max_num_of_gens > 0):
 
+            expected_hours_td = timedelta()
+            max_num_of_gens -= 1
             punch_results = []
 
             for business_day in available_business_days:
-                random_start_time = self.get_possible_datetime(
-                    possible_hours=self.possible_start_hours,
-                    possible_minutes=self.possible_minutes,
-                    from_datetime=business_day)
-
+                # Generates the start of the "working journey"
+                random_start_time = self \
+                    .get_possible_datetime(possible_hours=self.start_hours,
+                                           from_datetime=business_day)
                 punch_results.append(random_start_time)
 
+                # Generates the end of the "working journey"
                 random_end_time = self \
-                    .get_possible_datetime(possible_hours=self.possible_stop_hours,
-                                           possible_minutes=self.possible_minutes,
+                    .get_possible_datetime(possible_hours=self.stop_hours,
                                            from_datetime=business_day)
                 punch_results.append(random_end_time)
 
+                # Total hours "worked" during the given "business_day"
                 expected_hours_td += random_end_time - random_start_time
 
+        if max_num_of_gens == 0:
+            raise Exception("Reached the limit of retries without success."
+                            "Try to tune your configurations")
         return punch_results
 
     def generate(self) -> list:

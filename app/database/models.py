@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from sqlalchemy import (
     Boolean,
@@ -8,10 +8,11 @@ from sqlalchemy import (
     ForeignKey,
     MetaData,
     String,
-    Text,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from uuid import uuid4
+
 from ..configurations import get_database_connection
 
 Base = declarative_base()
@@ -44,7 +45,9 @@ class Punch(Base):
     id = Column(String(36), primary_key=True, default=uuid4)
 
     user = relationship("User", backref="punches")
-    user_id = Column(String, ForeignKey("USERS.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String,
+                     ForeignKey("USERS.id", ondelete="CASCADE"),
+                     nullable=False)
 
     should_punch_at = Column(DateTime)
     done = Column(Boolean)

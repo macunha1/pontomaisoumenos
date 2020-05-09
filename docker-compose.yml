@@ -7,8 +7,8 @@ services:
     ports:
       - '35432:5432'
     environment:
-      POSTGRES_PASSWORD: &postgresql_password topsecret!
       POSTGRES_USER: &postgresql_user dev
+      POSTGRES_PASSWORD: &postgresql_password topsecret!
     volumes:
       - postgres_data:/var/lib/postgresql/data
   redis:
@@ -20,7 +20,6 @@ services:
     image: ${APP_DOCKER_IMAGE}
     restart: on-failure:2
     environment:
-      TIMEZONE: ${TIMEZONE}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS}
       POSTGRES_HOST: postgresql
       POSTGRES_USER: *postgresql_user
@@ -33,7 +32,6 @@ services:
     restart: on-failure:2
     entrypoint: dramatiq app.tasks
     environment:
-      TIMEZONE: ${TIMEZONE}
       POSTGRES_HOST: postgresql
       POSTGRES_USER: *postgresql_user
       POSTGRES_PASSWORD: *postgresql_password

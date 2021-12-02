@@ -15,22 +15,22 @@ jobs:
             - /caches/pontomaisoumenos.tar
 
       - run:
-          name: Install make
+          name: Prepare | Install make
           command: |
             apk add make
 
       - run:
-          name: Load the docker image layers cached
+          name: Docker | Load the cached image layers
           command: |
             make CACHE_DIR=/caches load-docker-image
 
       - run:
-          name: Build application Docker image
+          name: Docker | Build application container image
           command: |
             make docker-build
 
       - run:
-          name: Run Docker save to cahce image layers
+          name: Docker | Save image layers to cache
           command: |
             mkdir -p /caches
             make CACHE_DIR=/caches save-docker-image
@@ -41,18 +41,22 @@ jobs:
             - /caches/pontomaisoumenos.tar
   test:
     docker:
-      - image: python:3.7-slim-buster 
+      - image: python:3.7-slim-buster
     steps:
+      - run:
+          name: Prepare | Install Git
+          command: |
+            apt-get update
+            apt-get install -y git
       - checkout
       - run:
           name: Test | Install dependencies
           command: |
-            apt-get update
             apt-get install -y python3-dev gcc \
               libffi-dev make
             python3 -m pip install flake8 pytest
             python3 -m pip install -r requirements.txt
-           
+
       - run:
           name: Test | Running PyTest
           command: |
@@ -62,5 +66,5 @@ workflows:
   version: 2
   build:
     jobs:
-    - test
+      - test
     # - build # Not used ATM

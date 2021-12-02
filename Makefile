@@ -10,7 +10,7 @@ tests:
 	flake8 --max-line-length=120 .
 	PYTHONPATH=${PWD} py.test tests/punches.py --disable-pytest-warnings
 
-docker: tests
+docker:
 	docker build \
 		--build-arg TIMEZONE="$(shell [ -f /etc/TZ ] && cat /etc/TZ || readlink -f /etc/localtime )" \
 		-t ${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:${DOCKER_IMAGE_VERSION} .

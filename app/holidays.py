@@ -1,6 +1,6 @@
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar
-from pandas import DateOffset
-from dateutil.relativedelta import MO
+# from pandas import DateOffset
+# from dateutil.relativedelta import MO
 
 
 class BrazilianHolidayCalendar(AbstractHolidayCalendar):
@@ -11,8 +11,8 @@ class BrazilianHolidayCalendar(AbstractHolidayCalendar):
     rules = [
         Holiday("New Years Day", month=1, day=1),
         # It's not trivial to infer Carnival's date
-        Holiday("Carnival", month=2, day=13,
-                offset=DateOffset(weekday=MO(3))),
+        # Holiday("Carnival", month=2, day=13,
+        #         offset=DateOffset(weekday=MO(3))),
         Holiday("Good Friday", month=3, day=30),
         Holiday("Tiradentes", month=4, day=21),
         Holiday("Labour Day", month=5, day=1),

@@ -53,16 +53,16 @@ class PunchSimulator:
                                              stop=self.stop_min)
 
     def get_business_days(self) -> DatetimeIndex:
+        brazilian_calendar = BrazilianHolidayCalendar()
+
+        custom_business_day = \
+            CustomBusinessDay(holidays=brazilian_calendar.holidays())
+
         month_length = monthrange(self.target_year,
                                   self.target_month)[1]
 
         start_at = datetime(self.target_year, self.target_month, 1)
         finish_at = datetime(self.target_year, self.target_month, month_length)
-
-        brazilian_calendar = BrazilianHolidayCalendar()
-
-        custom_business_day = \
-            CustomBusinessDay(holidays=brazilian_calendar.holidays())
 
         return date_range(start=start_at.strftime("%m/%d/%y"),
                           end=finish_at.strftime("%m/%d/%y"),
@@ -73,7 +73,6 @@ class PunchSimulator:
 
     def get_possible_datetime(self,
                               possible_hours: numpy.arange,
-                              possible_minutes: numpy.arange,
                               from_datetime: datetime) -> datetime:
         return datetime(year=from_datetime.year,
                         month=from_datetime.month,

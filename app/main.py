@@ -62,26 +62,24 @@ def save_punches(simulator: PunchSimulator,
 def parse_configurations() -> Dict[str, Any]:
     current_date = datetime.now()
     configparsed = {
-        "user": {
-            "start_min": CONF.getint("working_hours",
-                                     "possible_minutes_variation_start"),
-            "stop_min": CONF.getint("working_hours",
-                                    "possible_minutes_variation_end"),
-            "start_hours": CONF.getint("working_hours",
-                                       "possible_start_hour"),
-            "start_hours_variation": CONF.getfloat("working_hours",
-                                                   "accepted_start_hour_variation"),
-            "expected_daily_hours": CONF.getfloat("working_hours",
-                                                  "expected_daily_hours"),
-            "max_daily_hours": CONF.getint("working_hours",
-                                           "maximum_daily_working_hours"),
-            "lunch_time": CONF.getint("working_hours",
-                                      "lunch_time"),
-            "target_month": int(getenv("TARGET_MONTH") or
-                                current_date.month),
-            "target_year": int(getenv("TARGET_YEAR") or
-                               current_date.year)
-        }
+        "start_min": CONF.getint("working_hours",
+                                 "possible_minutes_variation_start"),
+        "stop_min": CONF.getint("working_hours",
+                                "possible_minutes_variation_end"),
+        "start_hours": CONF.getint("working_hours",
+                                   "possible_start_hour"),
+        "start_hours_variation": CONF.getfloat("working_hours",
+                                               "accepted_start_hour_variation"),
+        "expected_daily_hours": CONF.getfloat("working_hours",
+                                              "expected_daily_hours"),
+        "max_daily_hours": CONF.getint("working_hours",
+                                       "maximum_daily_working_hours"),
+        "lunch_time": CONF.getint("working_hours",
+                                  "lunch_time"),
+        "target_month": int(getenv("TARGET_MONTH") or
+                            current_date.month),
+        "target_year": int(getenv("TARGET_YEAR") or
+                           current_date.year)
     }
     return configparsed
 
@@ -97,9 +95,9 @@ def get_oscilated_latlong() -> Tuple[float, float]:
 
 def generate_monthly_working_hours(user: User) -> List[Punch]:
     configuration = parse_configurations()
+    punch_simulator = PunchSimulator(**configuration)
     # Save punches for this user on database
-    return save_punches(simulator=PunchSimulator(**configuration),
-                        user=user)
+    return save_punches(simulator=punch_simulator, user=user)
 
 
 def schedule_punches(user: User) -> None:

@@ -21,7 +21,7 @@ possible_minutes_variation_start = 0 # Minuto em que deseja começar os valores
 possible_minutes_variation_end = 59 # Minuto em que deseja terminar
 possible_start_hour = 9 # Hora para começar os valores randomicos
 lunch_time = 1 # Tempo de almoço para considerar na conta
-accepted_start_hour_variation = 1.23 # Variação na hora inicial
+accepted_start_hour_variation = 1.23 # Variação na hora inicial (hora initial-1 * variação)
 maximum_daily_working_hours = 10 # Quantidade máxima de horas para "trabalhar" por dia
 expected_daily_hours = 8 # Quantidade de horas que se espera "trabalhar" por dia
 

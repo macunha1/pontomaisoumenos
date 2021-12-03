@@ -24,7 +24,7 @@ class PunchSimulator:
 
         self.start_min = start_min
         self.stop_min = stop_min
-        self.start_hours = start_hours
+
         self.start_hours_variation = start_hours_variation
 
         self.expected_daily_hours = expected_daily_hours
@@ -38,15 +38,17 @@ class PunchSimulator:
         # Calculte the "mais ou menos" (values variation)
         self.variation_hours = (self.max_daily_hours /
                                 self.expected_daily_hours)
-        self.stop_hours = self.start_hours + \
-            self.expected_daily_hours + self.lunch_time
 
         self.start_hours = self \
-            .calculate_possible_times(from_value=self.start_hours,
+            .calculate_possible_times(from_value=start_hours,
                                       variation=self.start_hours_variation)
 
+        # Estimate the clock-out by start + expected hours + lunch time
+        stop_hours = start_hours + self.expected_daily_hours \
+            + self.lunch_time
+
         self.stop_hours = self \
-            .calculate_possible_times(from_value=self.stop_hours,
+            .calculate_possible_times(from_value=stop_hours,
                                       variation=self.variation_hours)
 
         self.possible_minutes = numpy.arange(start=self.start_min,
@@ -74,24 +76,28 @@ class PunchSimulator:
     def get_possible_datetime(self,
                               possible_hours: numpy.arange,
                               from_datetime: datetime) -> datetime:
+        hour = numpy.random.choice(possible_hours)
+        minute = numpy.random.choice(self.possible_minutes)
+
         return datetime(year=from_datetime.year,
                         month=from_datetime.month,
                         day=from_datetime.day,
-                        hour=numpy.random.choice(possible_hours),
-                        minute=numpy.random.choice(self.possible_minutes))
+                        hour=hour,
+                        minute=minute)
 
     def calculate_possible_times(self,
                                  from_value: int,
                                  variation: float) -> numpy.arange:
-        start_values_at = int(from_value)
+        start_values_at = int(from_value - 1)
         stop_values_at = int(from_value * variation)
+
         return numpy.arange(start=min(start_values_at, stop_values_at),
                             stop=max(start_values_at, stop_values_at))
 
     def generate_punches(self,
                          monthexpected_hours: int,
                          available_business_days: DatetimeIndex) -> list:
-        expected_hours_td = timedelta(hours=monthexpected_hours - 2)
+        expected_hours_td = timedelta(seconds=0)
         total_hours_td = timedelta(hours=monthexpected_hours)
         max_num_of_gens = self.max_num_of_generations
 
@@ -100,7 +106,7 @@ class PunchSimulator:
                 self.convert_timedelta_to_hours(total_hours_td)) and
                max_num_of_gens > 0):
 
-            expected_hours_td = timedelta()
+            expected_hours_td = timedelta(seconds=0)
             max_num_of_gens -= 1
             punch_results = []
 
@@ -118,11 +124,12 @@ class PunchSimulator:
                 punch_results.append(random_end_time)
 
                 # Total hours "worked" during the given "business_day"
-                expected_hours_td += random_end_time - random_start_time
+                expected_hours_td += (random_end_time - random_start_time)
 
         if max_num_of_gens == 0:
             raise Exception("Reached the limit of retries without success."
                             "Try to tune your configurations")
+
         return punch_results
 
     def generate(self) -> list:

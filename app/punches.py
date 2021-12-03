@@ -22,10 +22,19 @@ class PunchSimulator:
                  target_month: int = 1,
                  target_year: int = 1970):
 
-        self.start_min = start_min
-        self.stop_min = stop_min
-
         self.start_hours_variation = start_hours_variation
+
+        if start_hours_variation == 1:
+            self.start_min = 0
+            self.stop_min = 0  # disable variation, since there will be none
+
+            self.possible_minutes = numpy.array([0])
+        else:
+            self.start_min = start_min
+            self.stop_min = stop_min
+
+            self.possible_minutes = numpy.arange(start=self.start_min,
+                                                 stop=self.stop_min)
 
         self.expected_daily_hours = expected_daily_hours
         self.max_daily_hours = max_daily_hours
@@ -50,9 +59,6 @@ class PunchSimulator:
         self.stop_hours = self \
             .calculate_possible_times(from_value=stop_hours,
                                       variation=self.variation_hours)
-
-        self.possible_minutes = numpy.arange(start=self.start_min,
-                                             stop=self.stop_min)
 
     def get_business_days(self) -> DatetimeIndex:
         brazilian_calendar = BrazilianHolidayCalendar()
@@ -88,8 +94,13 @@ class PunchSimulator:
     def calculate_possible_times(self,
                                  from_value: int,
                                  variation: float) -> numpy.arange:
-        start_values_at = int(from_value - 1)
+        start_values_at = int(from_value)
         stop_values_at = int(from_value * variation)
+
+        if start_values_at == stop_values_at:
+            # Both values are the smae, no way to create a range, return a
+            # static list with the only value available
+            return numpy.array([start_values_at])
 
         return numpy.arange(start=min(start_values_at, stop_values_at),
                             stop=max(start_values_at, stop_values_at))

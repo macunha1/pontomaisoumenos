@@ -26,6 +26,7 @@ password = topsecret!too
 # working hours generation. Avoids an infinite
 # loop during execution.
 max_num_of_gens = 12750
+enable_best_effort = false
 
 [database]
 type = postgresql

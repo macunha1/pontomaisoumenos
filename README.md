@@ -37,6 +37,13 @@ longitude = -46.6618655
 email = some@email.com
 password = topsecret!too
 
+[algorithm]
+max_num_of_gens = 12750 # número de gerações no algorimo genético
+
+# Se mesmo aumentando o número de gerações o algoritmo ficar em loop infinito,
+# o modo "best effort" utiliza o valor mais próximo da carga horária total.
+enable_best_effort = false
+
 # Configuração do banco, o default está para o container no docker-compose.yml
 [database]
 type = postgresql

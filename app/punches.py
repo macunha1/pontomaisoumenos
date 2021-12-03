@@ -18,9 +18,13 @@ class PunchSimulator:
                  expected_daily_hours: int = 8,
                  max_daily_hours: int = 8,
                  max_num_of_generations: int = 12750,
+                 enable_best_effort: bool = False,
                  lunch_time: int = 1,
                  target_month: int = 1,
                  target_year: int = 1970):
+
+        self.max_num_of_generations = max_num_of_generations
+        self.enable_best_effort = enable_best_effort
 
         self.start_hours_variation = start_hours_variation
 
@@ -38,19 +42,18 @@ class PunchSimulator:
 
         self.expected_daily_hours = expected_daily_hours
         self.max_daily_hours = max_daily_hours
-        self.max_num_of_generations = max_num_of_generations
         self.lunch_time = lunch_time
 
         self.target_month = target_month
         self.target_year = target_year
 
-        # Calculte the "mais ou menos" (values variation)
-        self.variation_hours = (self.max_daily_hours /
-                                self.expected_daily_hours)
-
         self.start_hours = self \
             .calculate_possible_times(from_value=start_hours,
                                       variation=self.start_hours_variation)
+
+        # Calculte the "mais ou menos" (values variation)
+        self.variation_hours = (self.max_daily_hours /
+                                self.expected_daily_hours)
 
         # Estimate the clock-out by start + expected hours + lunch time
         stop_hours = start_hours + self.expected_daily_hours \
@@ -112,6 +115,10 @@ class PunchSimulator:
         total_hours_td = timedelta(hours=monthexpected_hours)
         max_num_of_gens = self.max_num_of_generations
 
+        # Use best shot as the buffer for the closest possible value
+        best_shot = timedelta(seconds=0)
+        best_generated_punches = []
+
         # Start to build value ranges until match the expected target
         while ((self.convert_timedelta_to_hours(expected_hours_td) !=
                 self.convert_timedelta_to_hours(total_hours_td)) and
@@ -137,9 +144,21 @@ class PunchSimulator:
                 # Total hours "worked" during the given "business_day"
                 expected_hours_td += (random_end_time - random_start_time)
 
+            # Get the closest value (smallest distance) to the total hours
+            best_shot = min([best_shot, expected_hours_td],
+                            key=lambda x: abs(total_hours_td-x))
+
+            # Are the current generated punches the best shot we have so far?
+            if best_shot == expected_hours_td:
+                # Store it for later
+                best_generated_punches = punch_results
+
         if max_num_of_gens == 0:
-            raise Exception("Reached the limit of retries without success."
-                            "Try to tune your configurations")
+            if not self.enable_best_effort:
+                raise Exception("Reached the limit of retries without success."
+                                "Try to tune your configurations")
+
+            punch_results = best_generated_punches
 
         return punch_results
 

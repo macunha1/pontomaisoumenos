@@ -26,3 +26,15 @@ def test_convert_timedelta_to_hours() -> None:
         .convert_timedelta_to_hours(timedelta(hours=100))
 
     assert 100 == simulated_hours
+
+
+def test_static_working_journey_generation() -> None:
+    daily_working_journey = 8  # hours
+
+    punch_simulator = PunchSimulator(lunch_time=0,
+                                     expected_daily_hours=daily_working_journey,
+                                     target_month=11,
+                                     target_year=2017)
+
+    bdays = CustomBusinessDay(holidays=br_holidays.holidays())
+    len(bdays) *

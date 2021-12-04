@@ -27,14 +27,20 @@ class PontoMais:
                                  data=auth_credentials)
 
         if response.content and not response.raise_for_status():
-            LOGGER.debug(f"PontoMais.authenticate response body {response.json().get('success')}")
             response_json = response.json()
-            return response_json.get("token"), response_json.get("client_id"), response_json.get("expiry")
+            LOGGER.debug("PontoMais.authenticate response body %s"
+                         % response_json.get('success'))
+            return (response_json.get("token"),
+                    response_json.get("client_id"),
+                    response_json.get("expiry"))
 
-        LOGGER.error(f"PontoMais.authenticate with error {response.status_code}")
+        LOGGER.error("PontoMais.authenticate with error %s"
+                     % response.status_code)
 
-    def register_punch(self, address: str, latitude: int, longitude: int) -> None:
-        punch_endpoint = "{url}/api/time_cards/register".format(url=BASE_URL)
+    def register_punch(self, address: str,
+                       latitude: int,
+                       longitude: int) -> None:
+        punch_endpoint = f"{BASE_URL}/api/time_cards/register"
 
         punch_data = {
             '_path': '/meu_ponto/registro_de_ponto',
@@ -65,7 +71,7 @@ class PontoMais:
         punch_headers = {
             'Host': 'api.pontomais.com.br',
             'Content-Type': 'application/json;charset=utf-8',
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0',  # noqa: E501
             'Accept': 'application/json, text/plain, */*',
             'Origin': 'https://app.pontomaisweb.com.br',
             'Referer': 'https://app.pontomaisweb.com.br//',
@@ -88,5 +94,7 @@ class PontoMais:
         if response.content and not response.raise_for_status():
             response_json = response.json()
             if response_json.get("untreated_time_card"):
-                punch_created_at = response_json.get("untreated_time_card").get("created_at")
-                LOGGER.info(f"PontoMais.register_punch created a time card at {punch_created_at}")
+                punch_created_at = response_json.get("untreated_time_card") \
+                                                .get("created_at")
+                LOGGER.info("PontoMais.register_punch created a time card at %s"
+                            % punch_created_at)

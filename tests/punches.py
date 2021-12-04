@@ -31,17 +31,22 @@ def test_convert_timedelta_to_hours() -> None:
 def test_static_working_journey_generation() -> None:
     daily_working_journey = 8  # hours
 
+    br_holidays = BrazilianHolidayCalendar()
+    bdays = CustomBusinessDay(holidays=br_holidays.holidays())
+    business_days = date_range(start="11/01/2017",
+                               end="11/30/2017",
+                               freq=bdays)
+
+    monthly_working_journey = len(business_days) * daily_working_journey
+
     punch_simulator = PunchSimulator(lunch_time=0,
                                      expected_daily_hours=daily_working_journey,
                                      target_month=11,
                                      target_year=2017)
 
-    bdays = CustomBusinessDay(holidays=br_holidays.holidays())
-    monthly_working_journey = len(bdays) * daily_working_journey
-
     generated_punches = punch_simulator.generate()
 
-    total_punched_timedelta = 0
+    total_punched_timedelta = timedelta(seconds=0)
 
     for index in range(0, len(generated_punches), 2):
         clockin_punch = generated_punches[index]

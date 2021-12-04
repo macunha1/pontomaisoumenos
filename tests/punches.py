@@ -37,4 +37,18 @@ def test_static_working_journey_generation() -> None:
                                      target_year=2017)
 
     bdays = CustomBusinessDay(holidays=br_holidays.holidays())
-    len(bdays) *
+    monthly_working_journey = len(bdays) * daily_working_journey
+
+    generated_punches = punch_simulator.generate()
+
+    total_punched_timedelta = 0
+
+    for index in range(0, len(generated_punches), 2):
+        clockin_punch = generated_punches[index]
+        clickout_punch = generated_punches[index+1]
+        total_punched_timedelta += (clickout_punch - clockin_punch)
+
+    total_generated_hours = punch_simulator \
+        .convert_timedelta_to_hours(total_punched_timedelta)
+
+    assert total_generated_hours == monthly_working_journey

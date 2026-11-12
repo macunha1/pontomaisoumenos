@@ -1,6 +1,4 @@
-.pytest_cache
-tests
-.gitignore
-docker-compose.yml
-Dockerfile
-Makefile
+*
+!dist/
+!dist/*.whl
+!dist/requirements.txt

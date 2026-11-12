@@ -1,34 +1,24 @@
-.PHONY: tests docker save-docker-image load-docker-image dev deploy
+DEVELOP = nix develop --impure --no-update-lock-file --command
 
-DOCKER_IMAGE_VERSION := latest
-REMOTE_REGISTRY := docker.io
-REMOTE_USERNAME := $${USER}
-CACHE_DIR := ${HOME}/.cache
-RUN_MIGRATIONS := no
+.PHONY: install check lint format typecheck tests build ci benchmark benchmark-http docker dev
+
+install check lint typecheck build ci:
+	$(DEVELOP) devenv tasks run app:$@
 
 tests:
-	flake8 --max-line-length=80 .
-	py.test tests/punches.py --disable-pytest-warnings
+	$(DEVELOP) devenv tasks run app:test
 
-docker:
-	docker build \
-		--build-arg TIMEZONE="$(shell [ -f /etc/TZ ] && cat /etc/TZ || readlink -f /etc/localtime )" \
-		-t ${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:${DOCKER_IMAGE_VERSION} .
+format:
+	$(DEVELOP) sh -c 'uv run --locked ruff check --fix . && uv run --locked ruff format . && nixfmt flake.nix devenv.nix shell.nix'
 
-save-docker-image:
-	docker save -o ${CACHE_DIR}/pontomaisoumenos.tar \
-		${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:${DOCKER_IMAGE_VERSION}
+benchmark:
+	$(DEVELOP) uv run --locked python scripts/benchmark_schedule.py
 
-load-docker-image:
-	docker load -i ${CACHE_DIR}/pontomaisoumenos.tar || true
+benchmark-http:
+	$(DEVELOP) uv run --locked python scripts/benchmark_http.py
 
-dev: docker
-	APP_DOCKER_IMAGE="${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:${DOCKER_IMAGE_VERSION}" \
-	RUN_MIGRATIONS="${RUN_MIGRATIONS}" \
-		docker-compose up -d
+docker: ci
+	$(DEVELOP) devenv tasks run app:image
 
-docker-push: docker
-	docker tag ${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:${DOCKER_IMAGE_VERSION} \
-		${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:$(date -u --iso-8601)
-	docker push ${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:$(date -u --iso-8601)
-	docker push ${REMOTE_REGISTRY}/${REMOTE_USERNAME}/pontomaisoumenos:${DOCKER_IMAGE_VERSION}
+dev:
+	$(DEVELOP) devenv up

@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pontomaisoumenos"
+version = "0.2.0"
+description = "Durable background scheduling and processing of PontoMais punches"
+readme = "README.md"
+requires-python = ">=3.14,<3.16"
+license = "Unlicense"
+dependencies = [
+  "aiosqlite>=0.22.1",
+  "alembic>=1.20.1",
+  "dramatiq>=2.2.1",
+  "holidays>=0.108",
+  "httpx>=0.28.1",
+  "pydantic>=2.14.3",
+  "pydantic-settings>=2.16.2",
+  "sqlalchemy[asyncio]>=2.1.8",
+  "tzdata>=2026.6",
+]
+
+[project.optional-dependencies]
+distributed = ["dramatiq[redis]>=2.2.1", "psycopg[binary]>=3.3.9"]
+
+[project.scripts]
+pontomaisoumenos = "pontomaisoumenos.cli:main"
+
+[dependency-groups]
+dev = [
+  "hatchling==1.33.0",
+  "build>=1.6.1",
+  "pytest>=9.2.0",
+  "pytest-asyncio>=1.4.1.post1",
+  "ruff>=0.17.4",
+  "ty>=0.0.101",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pontomaisoumenos"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/pyproject.toml", "/README.md", "/UNLICENSE"]
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib -ra"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["postgresql: requires PM_TEST_DATABASE_URL pointing at a disposable PostgreSQL database"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "ANN", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
+
+[tool.ty.src]
+include = ["src", "tests", "scripts"]
+
+[tool.ty.environment]
+python-version = "3.14"

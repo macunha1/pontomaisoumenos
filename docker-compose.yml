@@ -1,43 +1,27 @@
----
-version: '3'
+x-application: &application
+  build: .
+  image: ${APP_DOCKER_IMAGE:-pontomaisoumenos:local}
+  environment:
+    PM_DATABASE_URL: sqlite+aiosqlite:////data/pontomaisoumenos.db
+    PM_USER__EMAIL: ${PM_USER__EMAIL:?Set PM_USER__EMAIL in .env}
+    PM_USER__PASSWORD: ${PM_USER__PASSWORD:?Set PM_USER__PASSWORD in .env}
+  volumes:
+    - application_data:/data
+    - ./config/default.toml:/etc/pontomaisoumenos.toml:ro
+  init: true
+  stop_grace_period: 90s
+
 services:
-  postgresql: # Application relational database
-    image: postgres:11.1
-    restart: unless-stopped
-    ports:
-      - '35432:5432'
-    environment:
-      POSTGRES_USER: &postgresql_user dev
-      POSTGRES_PASSWORD: &postgresql_password topsecret!
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-  redis:
-    image: redis:5.0-alpine3.8
-    restart: unless-stopped
-    ports:
-      - '36379:6379'
+  migrate:
+    <<: *application
+    command: ["--config", "/etc/pontomaisoumenos.toml", "migrate"]
   application:
-    image: ${APP_DOCKER_IMAGE}
-    restart: on-failure:2
-    environment:
-      RUN_MIGRATIONS: ${RUN_MIGRATIONS}
-      POSTGRES_HOST: postgresql
-      POSTGRES_USER: *postgresql_user
-      POSTGRES_PASSWORD: *postgresql_password
-    links:
-      - "postgresql:postgres-01"
-      - "redis:redis-01"
-  dramatiq:
-    image: ${APP_DOCKER_IMAGE}
-    restart: on-failure:2
-    entrypoint: dramatiq app.tasks
-    environment:
-      POSTGRES_HOST: postgresql
-      POSTGRES_USER: *postgresql_user
-      POSTGRES_PASSWORD: *postgresql_password
-    links:
-      - "postgresql:postgres-01"
-      - "redis:redis-01"
+    <<: *application
+    restart: unless-stopped
+    command: ["--config", "/etc/pontomaisoumenos.toml", "serve"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
-  postgres_data:
+  application_data:

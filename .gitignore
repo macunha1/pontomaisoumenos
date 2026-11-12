@@ -9,3 +9,24 @@ pip-delete-this-directory.txt
 .coverage
 .coverage.*
 .pytest_cache/
+.venv/
+.ruff_cache/
+.ty_cache/
+dist/
+build/
+*.egg-info/
+.env
+config/local.toml
+.devenv/
+.direnv/
+*.db
+*.db-shm
+*.db-wal
+
+# Coding Agents
+mempalace.yaml
+entities.json
+.codex-plugin/*
+.mcp.json
+mcp.json
+.serena/*

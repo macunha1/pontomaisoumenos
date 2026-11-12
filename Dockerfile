@@ -1,31 +1,14 @@
-FROM python:3.7-slim-buster
-# FROM pypy:3-7.3.0-slim-buster -> not yet
-
-ARG TIMEZONE
-
-# Reducing the quantity of image layers through less commands
-RUN apt-get update && \
-    apt-get install -y build-essential \
-        libpq-dev && \
-    [ -f /etc/localtime ] && rm -f /etc/localtime && \
-    # if TIMEZONE is null, fallback to UTC-3 (America/Sao_Paulo)
-    ln -s "/usr/share/zoneinfo/${TIMEZONE:-America/Sao_Paulo}" \
-        /etc/localtime
-
-# Installing the dependencies before copying the code
-#   to take advantage of the Docker layer caching for deps
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install -U pip && \
-    pip install -r /tmp/requirements.txt && \
-    # Configure the "operating system"
-    # ln -s $(which pypy3) /usr/local/bin/python && \
-    mkdir /usr/local/lib/pontomaisoumenos
-
-# Docker image clean up, reduces the overall size
-RUN apt-get purge build-essential -y && \
-    apt-get autoclean -y && apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/*
-
-COPY . /usr/local/lib/pontomaisoumenos/
-WORKDIR /usr/local/lib/pontomaisoumenos
-ENTRYPOINT ["python", "-m", "app.main"]
+FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
+FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
+COPY --from=uv /uv /usr/local/bin/uv
+COPY dist/requirements.txt dist/*.whl /tmp/distribution/
+RUN uv pip sync --system --require-hashes /tmp/distribution/requirements.txt \
+    && uv pip install --system --no-deps /tmp/distribution/*.whl \
+    && rm -rf /tmp/distribution
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+RUN groupadd --gid 10001 worker && useradd --uid 10001 --gid worker --no-create-home worker \
+    && mkdir /data && chown worker:worker /data
+USER worker
+WORKDIR /data
+ENTRYPOINT ["python", "-m", "pontomaisoumenos"]
+CMD ["serve"]

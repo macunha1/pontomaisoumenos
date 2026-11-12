@@ -1,0 +1,19 @@
+name: Pinned build environment
+description: Install Nix and restore the shared toolchain and dependency download caches
+inputs:
+  shell:
+    description: Reviewed flake shell
+    default: python314
+runs:
+  using: composite
+  steps:
+    - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31
+      with:
+        extra_nix_config: |
+          accept-flake-config = true
+    - uses: nix-community/cache-nix-action@135667ec418502fa5a3598af6fb9eb733888ce6a # v6
+      with:
+        primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ inputs.shell }}-${{ hashFiles('.github/actions/setup/action.yml') }}-${{ hashFiles('flake.lock', 'flake.nix', 'devenv.nix', 'shell.nix') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-${{ inputs.shell }}-${{ hashFiles('.github/actions/setup/action.yml') }}-
+        paths: ~/.cache/uv
+        gc-max-store-size-linux: 6G

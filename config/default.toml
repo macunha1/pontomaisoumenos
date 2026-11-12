@@ -1,49 +1,20 @@
+# Optional non-secret configuration. PM_ environment variables override every value.
+timezone = "America/Sao_Paulo"
+holiday_subdivision = "SP"
+# Enabled optional holidays become full days off. Use [] to disable all optional entries.
+enabled_optional_holidays = ["carnival"]
+log_level = "INFO"
+
 [working_hours]
 possible_minutes_variation_start = 0
-possible_minutes_variation_end = 59
-# The hour that you (wanna) start to work
+possible_minutes_variation_end = 59 # exclusive
 possible_start_hour = 9
-lunch_time = 1
-# If you have flexible journey, this variable
-# will define the variation in the start hour
-# Otherwise, set it as 1 and it'll use the exact
-# time defined at "possible_start_hour"
+lunch_time = 1.0
 accepted_start_hour_variation = 1.23
-maximum_daily_working_hours = 10
+maximum_daily_working_hours = 10.0
 expected_daily_hours = 8.8
 
 [location]
 address = "Av. Paulista, 2300 - Bela Vista, São Paulo - SP, Brasil"
 latitude = -23.556828
 longitude = -46.6618655
-
-[user]
-email = some@email.com
-password = topsecret!too
-
-[algorithm]
-# Maximum number of retries during the monthly
-# working hours generation. Avoids an infinite
-# loop during execution.
-max_num_of_gens = 12750
-enable_best_effort = false
-
-[database]
-type = postgresql
-driver = psycopg2
-database = working_hours
-endpoint = postgres-01
-port = 5432
-username = dev
-password = topsecret!
-connection_string = %(type)s+%(driver)s://%(username)s:%(password)s@%(endpoint)s:%(port)s/
-
-[message_broker]
-type = redis
-database = 0
-endpoint = redis-01
-port = 6379
-connection_string = %(type)s://%(endpoint)s:%(port)s/%(database)s
-
-[logging]
-level = DEBUG
